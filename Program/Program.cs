@@ -133,7 +133,7 @@ namespace TestConsole
             }
         }
 
-        static ConcurrentDictionary<string, List<Socket>> _host_scks { get; } = new();
+        static ConcurrentDictionary<string, List<Socket>> _host_sockets { get; } = new();
         static ConcurrentDictionary<string, List<IPAddress>> _host_ips { get; } = new();
         static bool NoDnsChanges(string host, List<IPAddress> ips) => _host_ips[host].All(ips.Contains) && _host_ips[host].Count == ips.Count;
 
@@ -141,7 +141,7 @@ namespace TestConsole
         {
             Console.WriteLine($"Opening Socket: {socket.Handle}");
 
-            _host_scks.AddOrUpdate(host, new List<Socket> {socket}, (_, list) =>
+            _host_sockets.AddOrUpdate(host, new List<Socket> {socket}, (_, list) =>
             {
                 list.Add(socket);
                 return list;
@@ -172,8 +172,8 @@ namespace TestConsole
 
                 // Send sockets off to termination
                 Console.WriteLine($"Change detected in host ({host})");
-                var sockets = _host_scks[host].ToList();
-                _host_scks[host].Clear();
+                var sockets = _host_sockets[host].ToList();
+                _host_sockets[host].Clear();
 
                 foreach (var s in sockets)
                     _termination.TryAdd(s);
@@ -185,8 +185,8 @@ namespace TestConsole
         static void Cleanup()
         {
             // Already disconnected sockets are removed for GC
-            foreach (var pair in _host_scks)
-                _host_scks[pair.Key] = pair.Value.Where(s => s.Connected).ToList();
+            foreach (var pair in _host_sockets)
+                _host_sockets[pair.Key] = pair.Value.Where(s => s.Connected).ToList();
         }
 
         static BlockingCollection<Socket> _termination { get; } = new();
